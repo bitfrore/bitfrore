@@ -24,17 +24,17 @@
 #define CRYSTAL								12000000	///< quartz crystal resonator which is connected to the chip
 #define FREQUENCY							50000000	///< desired target frequency of the core
 
-#define LED_GPIO							LPC_GPIO1	///< GPIO port to which the LED is connected
+#define LED_GPIO							LPC_GPIO0	///< GPIO port to which the LED is connected
 
-#define LED_pin								8			///< pin number of the LED
+#define LED_pin								2			///< pin number of the LED
 
 #define LED									(1 << LED_pin)
 
 /// "variable" to manipulate the pin directly via GPIO masked access
 #define LED_gma								gpio_masked_access_t GPIO_MASKED_ACCESS(LED_GPIO, LED_pin)
 
-#define MOTOR_GPIO							LPC_GPIO1	///< GPIO port to which the LED is connected
-#define MOTOR_pin								9			///< pin number of the LED
+#define MOTOR_GPIO							LPC_GPIO0	///< GPIO port to which the LED is connected
+#define MOTOR_pin								8			///< pin number of the LED
 #define MOTOR									(1 << MOTOR_pin)
 
 /// "variable" to manipulate the pin directly via GPIO masked access

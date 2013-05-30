@@ -94,7 +94,6 @@ void initprinter(){
 }
 
 void printpaperwallet(){
-
   uint8_t PRIVATE[32];
   WORD xbuf[BIGNATBUFSIZE(32)];
   WORD ybuf[BIGNATBUFSIZE(32)];

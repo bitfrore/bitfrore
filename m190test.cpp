@@ -254,14 +254,14 @@ static const uint8_t ARD[] PROGMEM =
 
 void m190test(){
   m190::formfeed(30);
-  m190::print(F("       Epson M-190"));
-  m190::print(F("    Printer Driver Demo"));
-  m190::print(F("        Powered by"));
+//  m190::print(F("       Epson M-190"));
+//  m190::print(F("    Printer Driver Demo"));
+//  m190::print(F("        Powered by"));
   m190::printP(ARD,18,98);
-  m190::print(F("        Written by"));
-  m190::print(F("      Steven Pearson"));
-  m190::printP(ME,18,144);
-  m190::formfeed(20);
-  m190::print(F("  Thanks for Watching"));
-  m190::formfeed(20);
+//  m190::print(F("        Written by"));
+//  m190::print(F("      Steven Pearson"));
+//  m190::printP(ME,18,144);
+//  m190::formfeed(20);
+//  m190::print(F("  Thanks for Watching"));
+//  m190::formfeed(20);
 }

@@ -9,6 +9,8 @@
 #include <config.h>
 #include <serial.h>
 
+#define RECORD_TICKS
+
 #define ADC_NUM 8 /* for LPC11xx */
 #define ADC_CLK 2400000 /* set to 2.4Mhz */
 #define ADC_OFFSET 0x10
@@ -17,14 +19,52 @@
 #define ADC_DONE 0x80000000
 #define ADC_OVERRUN 0x40000000
 
-#define RDET_GPIO							LPC_GPIO1	///< GPIO port to which the LED is connected
+#define RDET_GPIO							LPC_GPIO0	///< GPIO port to which the LED is connected
 #define RDET_pin								5			///< pin number of the LED
 #define RDET									(1 << RDET_pin)
 
 /// "variable" to manipulate the pin directly via GPIO masked access
 #define RDET_gma								gpio_masked_access_t GPIO_MASKED_ACCESS(RDET_GPIO, RDET_pin)
 
-//#define RECORD_TICKS
+#define SOLA_GPIO LPC_GPIO1
+#define SOLA_pin  5
+#define SOLA		  (1 << SOLA_pin)
+#define SOLA_gma  gpio_masked_access_t GPIO_MASKED_ACCESS(SOLA_GPIO, SOLA_pin)
+
+#define SOLB_GPIO LPC_GPIO0
+#define SOLB_pin  9
+#define SOLB		  (1 << SOLB_pin)
+#define SOLB_gma  gpio_masked_access_t GPIO_MASKED_ACCESS(SOLB_GPIO, SOLB_pin)
+
+#define SOLC_GPIO LPC_GPIO0
+#define SOLC_pin  10
+#define SOLC		  (1 << SOLC_pin)
+#define SOLC_gma  gpio_masked_access_t GPIO_MASKED_ACCESS(SOLC_GPIO, SOLC_pin)
+
+#define SOLD_GPIO LPC_GPIO0
+#define SOLD_pin  11
+#define SOLD		  (1 << SOLD_pin)
+#define SOLD_gma  gpio_masked_access_t GPIO_MASKED_ACCESS(SOLD_GPIO, SOLD_pin)
+
+#define SOLE_GPIO LPC_GPIO0
+#define SOLE_pin  6
+#define SOLE		  (1 << SOLE_pin)
+#define SOLE_gma  gpio_masked_access_t GPIO_MASKED_ACCESS(SOLE_GPIO, SOLE_pin)
+
+#define SOLF_GPIO LPC_GPIO1
+#define SOLF_pin  0
+#define SOLF		  (1 << SOLF_pin)
+#define SOLF_gma  gpio_masked_access_t GPIO_MASKED_ACCESS(SOLF_GPIO, SOLF_pin)
+
+#define SOLG_GPIO LPC_GPIO1
+#define SOLG_pin  1
+#define SOLG		  (1 << SOLG_pin)
+#define SOLG_gma  gpio_masked_access_t GPIO_MASKED_ACCESS(SOLG_GPIO, SOLG_pin)
+
+#define SOLH_GPIO LPC_GPIO1
+#define SOLH_pin  2
+#define SOLH		  (1 << SOLH_pin)
+#define SOLH_gma  gpio_masked_access_t GPIO_MASKED_ACCESS(SOLH_GPIO, SOLH_pin)
 
 static const uint8_t ASCII[] PROGMEM =
 {
@@ -158,7 +198,7 @@ uint32_t m190adcread( uint8_t channelNum )
 }
 
 #ifdef RECORD_TICKS
-void recordTick(int val,unsigned long micros);
+extern "C" void recordTick(int val);
 #endif
 
 bool isTick(){
@@ -169,10 +209,10 @@ bool isTick(){
   lastvalpos++;
   lastvalpos%=3;
 
-  int val=m190adcread(1);
+  int val=m190adcread(5);
 
 #ifdef RECORD_TICKS
-  recordTick(val,micros());
+  recordTick(val);
 #endif   
 
   bool tickfound=false;
@@ -180,12 +220,15 @@ bool isTick(){
   int diff = lastvals[lastvalpos]-val;
 
   if(flipflop==0){
-    if( diff > 20 ){
+    if( diff > 25 ){
       flipflop=1;
       tickfound=true;
+#ifdef RECORD_TICKS
+      recordTick(9999);
+#endif
     }
   } else {
-    if( diff < -20 ){
+    if( diff < -25 ){
       flipflop=0;
     }
   }
@@ -196,6 +239,8 @@ bool isTick(){
 }
 
 const int RESET_LIMIT=30;
+
+int tickcount=0;
 
 bool isReset(){
   static uint8_t armed=0;
@@ -225,7 +270,14 @@ bool isReset(){
 }
 
 void solenoidsoff(){
-  LPC_GPIO0->DATA = 0x0000;
+      SOLA_gma=0;
+      SOLB_gma=0;
+      SOLC_gma=0;
+      SOLD_gma=0;
+      SOLE_gma=0;
+      SOLF_gma=0;
+      SOLG_gma=0;
+      SOLH_gma=0;
 }
 
 void motoroff(){
@@ -242,8 +294,23 @@ void motoron(){
 
 void m190::initialize(){
 
-  /* Solenoids on Port 0 to output */
-  LPC_GPIO0->DIR = 0x0FFF;
+  /* Solenoids pins GPIO */
+  LPC_IOCON->SWCLK_PIO0_10 |=0x81;
+  LPC_IOCON->R_PIO0_11 |=0x81;
+  LPC_IOCON->R_PIO1_0 |=0x81;
+  LPC_IOCON->R_PIO1_1 |=0x81;
+  LPC_IOCON->R_PIO1_2 |=0x81;
+  LPC_IOCON->SWDIO_PIO1_3 |=0x81;
+
+  // Solenoids to output
+  SOLA_GPIO->DIR |= SOLA;
+  SOLB_GPIO->DIR |= SOLB;
+  SOLC_GPIO->DIR |= SOLC;
+  SOLD_GPIO->DIR |= SOLD;
+  SOLE_GPIO->DIR |= SOLE;
+  SOLF_GPIO->DIR |= SOLF;
+  SOLG_GPIO->DIR |= SOLG;
+  SOLH_GPIO->DIR |= SOLH;
 
   //Printer Motor to output
 
@@ -253,6 +320,7 @@ void m190::initialize(){
   motoroff();
 
   //Reset detector to input
+  LPC_IOCON->PIO0_5 |=0x81;
   RDET_GPIO->DIR &= ~RDET;
 }
 
@@ -265,18 +333,18 @@ int calcPortVal(m190::pixelsource source,void *ctx,int x,int y,int solgroup){
   //Only power 3 solenoids max at a time
   switch(solgroup){
     case 0:
-      if(source(ctx,x+126,y)){ret|=1<<1;} //H
-      if(source(ctx,x+54,y)){ret|=1<<5;} //D
+      if(source(ctx,x,y)){ret|=1;} //A
+      if(source(ctx,x+54,y)){ret|=1<<3;} //D
+      if(source(ctx,x+108,y)){ret|=1<<6;} //G
       break;
     case 1:
-      if(source(ctx,x+18,y)){ret|=1<<7;} //B
+      if(source(ctx,x+18,y)){ret|=1<<1;} //B
       if(source(ctx,x+72,y)){ret|=1<<4;} //E
-      if(source(ctx,x+108,y)){ret|=1<<2;} //G
+      if(source(ctx,x+126,y)){ret|=1<<7;} //H
       break;
     case 2:
-      if(source(ctx,x,y)){ret|=1;} //A
-      if(source(ctx,x+36,y)){ret|=1<<6;} //C
-      if(source(ctx,x+90,y)){ret|=1<<3;} //F
+      if(source(ctx,x+36,y)){ret|=1<<2;} //C
+      if(source(ctx,x+90,y)){ret|=1<<5;} //F
       break;
   }
 
@@ -284,8 +352,6 @@ int calcPortVal(m190::pixelsource source,void *ctx,int x,int y,int solgroup){
 }
 
 void m190::print(pixelsource source,void *ctx,int rows,bool overlap){
-
-  LPC_GPIO0->DIR = 0x0FFF;
 
   solenoidsoff();
   motoron();
@@ -301,6 +367,11 @@ void m190::print(pixelsource source,void *ctx,int rows,bool overlap){
   int fire=0;
   while(y<rows){
     if( isReset() ){
+      #ifdef RECORD_TICKS
+      recordTick(2000+ticks);
+      tickcount=0;
+      #endif
+
       ticks=0;
       y++;
       //calc first byte for this new row
@@ -316,7 +387,73 @@ void m190::print(pixelsource source,void *ctx,int rows,bool overlap){
 
     //We are in the printing range
     if( y>=0 && ticks >=firsttick && ticks <=maxticks ){
-      LPC_GPIO0->DATA = fire<<2;
+      if( (fire&(1<<0)) !=0 ){
+        SOLA_gma=SOLA;
+      }else{
+        SOLA_gma=0;
+      }
+      if( (fire&(1<<1)) !=0 ){
+        SOLB_gma=SOLB;
+      }else{
+        SOLB_gma=0;
+      }
+      if( (fire&(1<<2)) !=0 ){
+        SOLC_gma=SOLC;
+      }else{
+        SOLC_gma=0;
+      }
+
+      if( (fire&(1<<3)) !=0 ){
+        SOLD_gma=SOLD;
+      }else{
+        SOLD_gma=0;
+      }
+
+      if( (fire&(1<<4)) !=0 ){
+        SOLE_gma=SOLE;
+      }else{
+        SOLE_gma=0;
+      }
+
+      if( (fire&(1<<5)) !=0 ){
+        SOLF_gma=SOLF;
+      }else{
+        SOLF_gma=0;
+      }
+
+      if( (fire&(1<<6)) !=0 ){
+        SOLG_gma=SOLG;
+      }else{
+        SOLG_gma=0;
+      }
+
+      if( (fire&(1<<7)) !=0 ){
+        SOLH_gma=SOLH;
+      }else{
+        SOLH_gma=0;
+      }
+
+
+/*
+      if( ticks%3==1){
+        SOLC_gma=SOLC;
+      }else{
+        SOLC_gma=0;
+      }
+      if( ticks%3==2){
+        SOLD_gma=SOLD;
+      }else{
+        SOLD_gma=0;
+      }
+*/
+      //(fire&1)==1?SOLA_gma==SOLA:SOLA_gma=0;
+      //(fire&(1<<1))==SOLB?SOLB_gma=SOLB:SOLB_gma=0;
+      //(fire&(1<<2))!=0?SOLC_gma|=SOLC:SOLC_gma&=~SOLC;
+      //(fire&(1<<3))!=0?SOLD_gma|=SOLD:SOLD_gma&=~SOLD;
+      //(fire&(1<<4))!=0?SOLE_gma|=SOLE:SOLE_gma&=~SOLE;
+      //(fire&(1<<5))!=0?SOLF_gma|=SOLF:SOLF_gma&=~SOLF;
+      //(fire&(1<<6))!=0?SOLG_gma|=SOLG:SOLG_gma&=~SOLG;
+      //(fire&(1<<7))!=0?SOLH_gma|=SOLH:SOLH_gma&=~SOLH;
 
       int pos = (ticks-firsttick)+1;
       int x=pos/3;

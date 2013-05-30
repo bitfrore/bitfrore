@@ -49,7 +49,7 @@
 #include <serial.h>
 
 #define BUTTON_GPIO							LPC_GPIO1	///< GPIO port to which the LED is connected
-#define BUTTON_pin								4			///< pin number of the LED
+#define BUTTON_pin								8			///< pin number of the LED
 #define BUTTON									(1 << BUTTON_pin)
 
 /// "variable" to manipulate the pin directly via GPIO masked access
@@ -145,14 +145,26 @@ int adcinit(){
   /* Unlike some other pings, for ADC test, all the pins need
 to set to analog mode. Bit 7 needs to be cleared according
 to design team. */
-  LPC_IOCON->R_PIO0_11 &= ~0x8F; /* ADC I/O config */
-  LPC_IOCON->R_PIO0_11 |= 0x02; /* ADC IN0 */
-  LPC_IOCON->R_PIO1_0 &= ~0x8F; /* ADC I/O config */
-  LPC_IOCON->R_PIO1_0 |= 0x02; /* ADC IN1 */
+  LPC_IOCON->SWDIO_PIO1_3 &= ~0x8F; /* ADC I/O config */
+  LPC_IOCON->SWDIO_PIO1_3 |= 0x02; /* ADC IN0 */
+  LPC_IOCON->PIO1_4 &= ~0x8F; /* ADC I/O config */
+  LPC_IOCON->PIO1_4 |= 0x01; /* ADC IN1 */
 
   LPC_ADC->CR = ((12000000UL/LPC_SYSCON->SYSAHBCLKDIV)/ADC_Clk-1)<<8;
 
   return;
+}
+
+#define tickring 128
+int ticks[tickring];
+int tickpos=0;
+
+void recordTick(int val){
+  ticks[tickpos]=val;
+  tickpos++;
+  if(tickpos>tickring){
+    tickpos=0;
+  }
 }
 
 uint32_t adcread( uint8_t channelNum )
@@ -186,24 +198,44 @@ uint32_t adcread( uint8_t channelNum )
   return ( ADC_Data );	/* return A/D conversion value */
 }
 
+void printticks(){
+  int i;
+  char buf[10];
+  for(i=0;i<tickring;i++){
+    int tp = tickpos+i;
+    tp%=tickring;
+    my_itoa(ticks[tp],buf,10);
+    serialprint("tick = ");
+    serialprint(buf);
+    serialprint("\n");
+  }
+}
+
 void goadc(){
   for(;;){
     char buf[10];
     uint32_t val;
 
-    val = adcread(0); 
+    val = adcread(4); 
     my_itoa(val,buf,10);
-    serialprint("AD0 = ");
+    serialprint("AD4 = ");
     serialprint(buf);
     serialprint("\n");
 
-    val = adcread(1); 
+    val = adcread(5); 
     my_itoa(val,buf,10);
-    serialprint("AD1 = ");
+    serialprint("AD5 = ");
     serialprint(buf);
     serialprint("\n");
   }
 }
+
+#define RDET_GPIO							LPC_GPIO0	///< GPIO port to which the LED is connected
+#define RDET_pin								5			///< pin number of the LED
+#define RDET									(1 << RDET_pin)
+
+/// "variable" to manipulate the pin directly via GPIO masked access
+#define RDET_gma								gpio_masked_access_t GPIO_MASKED_ACCESS(RDET_GPIO, RDET_pin)
 
 int main(void)
 {
@@ -213,12 +245,6 @@ int main(void)
 	pll_start(CRYSTAL, FREQUENCY);			// start the PLL
 	system_init();							// initialize other necessary elements
   //Configure for GPIO
-  LPC_IOCON->SWCLK_PIO0_10 |=0x81;
-  //LPC_IOCON->R_PIO0_11 |=0x81;
-  //LPC_IOCON->R_PIO1_0 |=0x81;
-  LPC_IOCON->R_PIO1_1 |=0x81;
-  LPC_IOCON->R_PIO1_2 |=0x81;
-  LPC_IOCON->SWDIO_PIO1_3 |=0x81;
   serialinit();
   initprinter();
   adcinit();
@@ -234,9 +260,9 @@ int main(void)
 
   while((BUTTON_gma & BUTTON) == 0){}
 
-  serialprint("go\n");
-
   //goadc();
+
+  serialprint("go\n");
 
 //	while (1)
 //	{
@@ -260,6 +286,8 @@ int main(void)
   serialprint("print\n");
   //m190test();
   printpaperwallet();  
+
+//  printticks();
 
 /*
   testBigNat();

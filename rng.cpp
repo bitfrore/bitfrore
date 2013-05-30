@@ -64,7 +64,7 @@ uint32_t rngadcread( uint8_t channelNum )
 }
 
 uint8_t getSampleImpl(){
-  int s = rngadcread(0);
+  int s = rngadcread(4);
 //  char msg[32];
 //  sprintf(msg,"RAW SAMPLE %d\r\n",s);
 //  serialprint(msg);
