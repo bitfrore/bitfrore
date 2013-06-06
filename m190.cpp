@@ -94,6 +94,8 @@ void initprinter(){
 }
 
 void printpaperwallet(){
+  m190::formfeed(30);
+
   uint8_t PRIVATE[32];
   WORD xbuf[BIGNATBUFSIZE(32)];
   WORD ybuf[BIGNATBUFSIZE(32)];
@@ -103,14 +105,13 @@ void printpaperwallet(){
 
   bitaddress::generatePublicKey(PRIVATE,pubx,puby);
 
-  m190::formfeed(30);
 
-  qroffset=5;
+  qroffset=20;
   printprivate(PRIVATE);
   m190::formfeed(75);
   
   
-  qroffset=5;
+  qroffset=6;
   printpublic(pubx,puby);
   m190::formfeed(20);
 
