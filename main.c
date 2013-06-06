@@ -57,7 +57,7 @@
 
 
 void PROGRESS(float p){
-  serialprint(".");
+  //serialprint(".");
 	LED_gma ^= LED;
 }
 
@@ -254,51 +254,54 @@ int main(void)
   MOTOR_GPIO->DIR |= MOTOR;
   MOTOR_gma=0;
 
-  serialprint("BEGIN\n");
-
-  LED_gma = LED;
-
-  while((BUTTON_gma & BUTTON) == 0){}
-
-  //goadc();
-
-  serialprint("go\n");
-
-//	while (1)
-//	{
-//    LED_gma = 0;						// instead of LED_GPIO->DATA &= ~LED;
-//    for (count = 0; count < count_max; count++);	// delay
-//    LED_gma = LED;						// instead of LED_GPIO->DATA |= LED;
-
-//    for(q=0;q<12;q++){
-//      LPC_GPIO0->DATA = 1<<q;
-//      LPC_GPIO1->DATA = 1<<q;
-
-//      LPC_GPIO0->DATA |= 1<<10;
-//      MOTOR_gma=MOTOR;
-//		  for (count = 0; count < count_max; count++);	// delay
-//      LPC_GPIO0->DATA &= ~(1<<10);
-//      MOTOR_gma=0;
-//		  for (count = 0; count < count_max; count++);	// delay
-//    }
-//  }
-
-  serialprint("print\n");
-  //m190test();
-  printpaperwallet();  
-
-//  printticks();
-
-/*
-  testBigNat();
-  testBigInt();
-  testBitElliptic();
-  testbitaddress();
-*/
-  serialprint("done\n");
-
 	while (1)
 	{
+    serialprint("BEGIN\n");
+
+    LED_gma = LED;
+
+    //testbitaddress();
+
+
+    while((BUTTON_gma & BUTTON) == 0){}
+
+    serialprint("go\n");
+
+    //goadc();
+
+
+  //	while (1)
+  //	{
+  //    LED_gma = 0;						// instead of LED_GPIO->DATA &= ~LED;
+  //    for (count = 0; count < count_max; count++);	// delay
+  //    LED_gma = LED;						// instead of LED_GPIO->DATA |= LED;
+
+  //    for(q=0;q<12;q++){
+  //      LPC_GPIO0->DATA = 1<<q;
+  //      LPC_GPIO1->DATA = 1<<q;
+
+  //      LPC_GPIO0->DATA |= 1<<10;
+  //      MOTOR_gma=MOTOR;
+  //		  for (count = 0; count < count_max; count++);	// delay
+  //      LPC_GPIO0->DATA &= ~(1<<10);
+  //      MOTOR_gma=0;
+  //		  for (count = 0; count < count_max; count++);	// delay
+  //    }
+  //  }
+
+    serialprint("print\n");
+  //  m190test();
+    printpaperwallet();  
+
+  //  printticks();
+  //  testBigNat();
+  //  testBigInt();
+  //  testBitElliptic();
+  //  testbitaddress();
+
+    serialprint("done\n");
+
+
 	}
 }
 
