@@ -24,9 +24,9 @@
 #define CRYSTAL								12000000	///< quartz crystal resonator which is connected to the chip
 #define FREQUENCY							50000000	///< desired target frequency of the core
 
-#define LED_GPIO							LPC_GPIO0	///< GPIO port to which the LED is connected
+#define LED_GPIO							LPC_GPIO3	///< GPIO port to which the LED is connected
 
-#define LED_pin								2			///< pin number of the LED
+#define LED_pin								3			///< pin number of the LED
 
 #define LED									(1 << LED_pin)
 

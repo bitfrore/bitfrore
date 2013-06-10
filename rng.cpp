@@ -11,17 +11,21 @@
 #include <math.h>
 #include <stdio.h>
 #include <serial.h>
+#include <itoa.h>
 
 #define NIST_RNG_VERIFY
 #define NIST_RUN_RNG_VERIFY
 #define DEBIAS
 
-//#define DEBUG
+#define DEBUG
 
 //#define RNGVALDEBUG
 
 #ifdef DEBUG
-void DBGPRINT(char *str);
+void DBGPRINT(char *str){
+  serialprint(str);
+  serialprint("\n");
+}
 #endif
 
 #define ADC_NUM 8 /* for LPC11xx */
@@ -64,10 +68,11 @@ uint32_t rngadcread( uint8_t channelNum )
 }
 
 uint8_t getSampleImpl(){
-  int s = rngadcread(4);
-//  char msg[32];
-//  sprintf(msg,"RAW SAMPLE %d\r\n",s);
-//  serialprint(msg);
+  int s = rngadcread(3);
+
+//  char out[10];
+//   my_itoa(s,out,10);
+//   DBGPRINT(out);
 
   //Analog values have 10 bits of accuracy. Condense these 10 bits of noise into 1 bit
   uint8_t r = (s ^ s>>1 ^ s>>2  ^ s>>3 ^ s>>4 ^ s>>5 ^ s>>6 ^ s>>7 ^ s>>8 ^ s>>9)&0x01;
@@ -82,11 +87,13 @@ uint8_t getSample(){
     uint8_t s2 =getSampleImpl();
 
 #ifdef RNGVALDEBUG
+
   char out[5];
-  itoa(s1,out,10);
+  my_itoa(s1,out,10);
   DBGPRINT(out);
-  itoa(s2,out,10);
+  my_itoa(s2,out,10);
   DBGPRINT(out);
+
 #endif    
 
     //debias
@@ -145,15 +152,16 @@ bool generateimpl(uint8_t data[32]){
   float sobs = freq/rootn;
   float Pfreq = sobs/roottwo;
 
-  if(Pfreq>1.82139){
-    serialprint("FAIL FREQ");
 #ifdef DEBUG
+    DBGPRINT("FREQ");
     char out[5];
-    itoa(p,out,10);
+    my_itoa(p,out,10);
     DBGPRINT(out);
 
-    DBGPRINT("FAIL FREQ");
 #endif
+
+  if(Pfreq>1.82139){
+    DBGPRINT("FAIL FREQ");
     return false;
   } else {
 #ifdef NIST_RUN_RNG_VERIFY
@@ -170,8 +178,6 @@ bool generateimpl(uint8_t data[32]){
   
 
     if(Prun>1.82139){
-      serialprint("FAIL RUN");
-
 #ifdef DEBUG
     DBGPRINT("FAIL RUN");
 #endif

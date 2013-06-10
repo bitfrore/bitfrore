@@ -19,50 +19,50 @@
 #define ADC_DONE 0x80000000
 #define ADC_OVERRUN 0x40000000
 
-#define RDET_GPIO							LPC_GPIO0	///< GPIO port to which the LED is connected
-#define RDET_pin								5			///< pin number of the LED
+#define RDET_GPIO							LPC_GPIO2	///< GPIO port to which the LED is connected
+#define RDET_pin								3			///< pin number of the LED
 #define RDET									(1 << RDET_pin)
 
 /// "variable" to manipulate the pin directly via GPIO masked access
 #define RDET_gma								gpio_masked_access_t GPIO_MASKED_ACCESS(RDET_GPIO, RDET_pin)
 
-#define SOLA_GPIO LPC_GPIO1
-#define SOLA_pin  5
+#define SOLA_GPIO LPC_GPIO2
+#define SOLA_pin  1
 #define SOLA		  (1 << SOLA_pin)
 #define SOLA_gma  gpio_masked_access_t GPIO_MASKED_ACCESS(SOLA_GPIO, SOLA_pin)
 
 #define SOLB_GPIO LPC_GPIO0
-#define SOLB_pin  9
+#define SOLB_pin  10
 #define SOLB		  (1 << SOLB_pin)
 #define SOLB_gma  gpio_masked_access_t GPIO_MASKED_ACCESS(SOLB_GPIO, SOLB_pin)
 
-#define SOLC_GPIO LPC_GPIO0
-#define SOLC_pin  10
+#define SOLC_GPIO LPC_GPIO2
+#define SOLC_pin  11
 #define SOLC		  (1 << SOLC_pin)
 #define SOLC_gma  gpio_masked_access_t GPIO_MASKED_ACCESS(SOLC_GPIO, SOLC_pin)
 
-#define SOLD_GPIO LPC_GPIO0
-#define SOLD_pin  11
+#define SOLD_GPIO LPC_GPIO2
+#define SOLD_pin  4
 #define SOLD		  (1 << SOLD_pin)
 #define SOLD_gma  gpio_masked_access_t GPIO_MASKED_ACCESS(SOLD_GPIO, SOLD_pin)
 
-#define SOLE_GPIO LPC_GPIO0
-#define SOLE_pin  6
+#define SOLE_GPIO LPC_GPIO3
+#define SOLE_pin  5
 #define SOLE		  (1 << SOLE_pin)
 #define SOLE_gma  gpio_masked_access_t GPIO_MASKED_ACCESS(SOLE_GPIO, SOLE_pin)
 
-#define SOLF_GPIO LPC_GPIO1
-#define SOLF_pin  0
+#define SOLF_GPIO LPC_GPIO0
+#define SOLF_pin  7
 #define SOLF		  (1 << SOLF_pin)
 #define SOLF_gma  gpio_masked_access_t GPIO_MASKED_ACCESS(SOLF_GPIO, SOLF_pin)
 
-#define SOLG_GPIO LPC_GPIO1
-#define SOLG_pin  1
+#define SOLG_GPIO LPC_GPIO0
+#define SOLG_pin  2
 #define SOLG		  (1 << SOLG_pin)
 #define SOLG_gma  gpio_masked_access_t GPIO_MASKED_ACCESS(SOLG_GPIO, SOLG_pin)
 
-#define SOLH_GPIO LPC_GPIO1
-#define SOLH_pin  2
+#define SOLH_GPIO LPC_GPIO2
+#define SOLH_pin  8
 #define SOLH		  (1 << SOLH_pin)
 #define SOLH_gma  gpio_masked_access_t GPIO_MASKED_ACCESS(SOLH_GPIO, SOLH_pin)
 
@@ -209,7 +209,7 @@ bool isTick(){
   lastvalpos++;
   lastvalpos%=3;
 
-  int val=m190adcread(5);
+  int val=m190adcread(7);
 
 #ifdef RECORD_TICKS
   recordTick(val);
@@ -280,6 +280,17 @@ void solenoidsoff(){
       SOLH_gma=0;
 }
 
+void solenoidson(){
+      SOLA_gma=SOLA;
+      SOLB_gma=SOLB;
+      SOLC_gma=SOLC;
+      SOLD_gma=SOLD;
+      SOLE_gma=SOLE;
+      SOLF_gma=SOLF;
+      SOLG_gma=SOLG;
+      SOLH_gma=SOLH;
+}
+
 void motoroff(){
   //Motor OFF
   MOTOR_gma=0;
@@ -295,12 +306,15 @@ void motoron(){
 void m190::initialize(){
 
   /* Solenoids pins GPIO */
-  LPC_IOCON->SWCLK_PIO0_10 |=0x81;
-  LPC_IOCON->R_PIO0_11 |=0x81;
-  LPC_IOCON->R_PIO1_0 |=0x81;
-  LPC_IOCON->R_PIO1_1 |=0x81;
-  LPC_IOCON->R_PIO1_2 |=0x81;
-  LPC_IOCON->SWDIO_PIO1_3 |=0x81;
+  //LPC_IOCON->PIO0_8 |=0x80; //Motor
+  //LPC_IOCON->PIO2_1 = 0x80; //A
+  LPC_IOCON->SWCLK_PIO0_10 |=0x81; //B
+  //LPC_IOCON->PIO2_11 |=0x80; //C
+  //LPC_IOCON->PIO2_4 |=0x80; //D
+  //LPC_IOCON->PIO3_5 |=0x80; //E
+  //LPC_IOCON->PIO0_7 |=0x80; //F
+  //LPC_IOCON->PIO0_2 |=0x80; //G
+  //LPC_IOCON->PIO2_8 =0x80; //H
 
   // Solenoids to output
   SOLA_GPIO->DIR |= SOLA;
@@ -320,7 +334,7 @@ void m190::initialize(){
   motoroff();
 
   //Reset detector to input
-  LPC_IOCON->PIO0_5 |=0x81;
+  LPC_IOCON->PIO2_3 |=0x81;
   RDET_GPIO->DIR &= ~RDET;
 }
 

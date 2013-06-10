@@ -48,8 +48,8 @@
 #include <itoa.h>
 #include <serial.h>
 
-#define BUTTON_GPIO							LPC_GPIO1	///< GPIO port to which the LED is connected
-#define BUTTON_pin								8			///< pin number of the LED
+#define BUTTON_GPIO							LPC_GPIO2	///< GPIO port to which the LED is connected
+#define BUTTON_pin								6			///< pin number of the LED
 #define BUTTON									(1 << BUTTON_pin)
 
 /// "variable" to manipulate the pin directly via GPIO masked access
@@ -145,10 +145,10 @@ int adcinit(){
   /* Unlike some other pings, for ADC test, all the pins need
 to set to analog mode. Bit 7 needs to be cleared according
 to design team. */
-  LPC_IOCON->SWDIO_PIO1_3 &= ~0x8F; /* ADC I/O config */
-  LPC_IOCON->SWDIO_PIO1_3 |= 0x02; /* ADC IN0 */
-  LPC_IOCON->PIO1_4 &= ~0x8F; /* ADC I/O config */
-  LPC_IOCON->PIO1_4 |= 0x01; /* ADC IN1 */
+  LPC_IOCON->R_PIO1_2 &= ~0x8F; /* ADC I/O config */
+  LPC_IOCON->R_PIO1_2 |= 0x01; /* ADC IN0 */
+  LPC_IOCON->PIO1_11 &= ~0x8F; /* ADC I/O config */
+  LPC_IOCON->PIO1_11 |= 0x01; /* ADC IN1 */
 
   LPC_ADC->CR = ((12000000UL/LPC_SYSCON->SYSAHBCLKDIV)/ADC_Clk-1)<<8;
 
@@ -216,15 +216,9 @@ void goadc(){
     char buf[10];
     uint32_t val;
 
-    val = adcread(4); 
+    val = adcread(3); 
     my_itoa(val,buf,10);
-    serialprint("AD4 = ");
-    serialprint(buf);
-    serialprint("\n");
-
-    val = adcread(5); 
-    my_itoa(val,buf,10);
-    serialprint("AD5 = ");
+    serialprint("AD3 = ");
     serialprint(buf);
     serialprint("\n");
   }
@@ -247,6 +241,7 @@ int main(void)
   //Configure for GPIO
   serialinit();
   initprinter();
+
   adcinit();
 
 	LED_GPIO->DIR |= LED;					// set the direction of the LED pin to output
@@ -254,6 +249,37 @@ int main(void)
   MOTOR_GPIO->DIR |= MOTOR;
   MOTOR_gma=0;
 
+
+//    testBigNat();
+//    testBigInt();
+//    testBitElliptic();
+//  goadc();
+
+//    testbitaddress();
+
+/*
+  while (1)
+  	{
+      serialprint("\r\nLOOP");
+      LED_gma = LED;						// instead of LED_GPIO->DATA &= ~LED;
+      for (count = 0; count < count_max; count++);	// delay
+      LED_gma = 0;						// instead of LED_GPIO->DATA |= LED;
+
+//      for(q=0;q<12;q++){
+//        serialprint(".");
+        LPC_GPIO0->DATA = 0xFFFFFF;
+        LPC_GPIO1->DATA = 0xFFFFFF;
+        LPC_GPIO2->DATA = 0xFFFFFF;
+        LPC_GPIO3->DATA = 0xFFFFFF;
+  		  for (count = 0; count < count_max; count++);	// delay
+        LPC_GPIO0->DATA = 0;
+        LPC_GPIO1->DATA = 0;
+        LPC_GPIO2->DATA = 0;
+        LPC_GPIO3->DATA = 0;
+      //}
+    }
+
+*/
 	while (1)
 	{
     serialprint("BEGIN\n");
@@ -266,9 +292,6 @@ int main(void)
     while((BUTTON_gma & BUTTON) == 0){}
 
     serialprint("go\n");
-
-    //goadc();
-
 
   //	while (1)
   //	{
@@ -293,7 +316,7 @@ int main(void)
   //  m190test();
     printpaperwallet();  
 
-  //  printticks();
+    printticks();
   //  testBigNat();
   //  testBigInt();
   //  testBitElliptic();
