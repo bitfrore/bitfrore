@@ -7,6 +7,7 @@
 
 namespace base58{
   void encode(uint8_t *data,int dataLen,char *out,int outlen);
+  int decode(const char *data,uint8_t *out,int outlen);
 }
 
 #endif
