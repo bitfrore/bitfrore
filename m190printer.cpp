@@ -7,7 +7,6 @@
 #include "inc/LPC11xx.h"
 #include "hdr/hdr_gpio_masked_access.h"
 #include <config.h>
-#include <serial.h>
 
 #define RECORD_TICKS
 
@@ -294,11 +293,9 @@ void solenoidson(){
 void motoroff(){
   //Motor OFF
   MOTOR_gma=0;
-  serialprint("Motor Off");
 }
 
 void motoron(){
-  serialprint("Motor On");
   //Motor OFF
   MOTOR_gma=MOTOR;
 }
