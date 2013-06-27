@@ -9,6 +9,7 @@ void serialinit();
 void serialprint(const char *msg);
 void serialwrite(const char *msg,int len);
 void serialputc(const char c);
+void serialprinti(int val);
 
 #ifdef __cplusplus
 }

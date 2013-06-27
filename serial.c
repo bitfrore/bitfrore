@@ -71,4 +71,8 @@ void serialwrite(const char *msg,int len){
   }
 }
 
-
+void serialprinti(int val){
+  char buf[10];
+  my_itoa(val,buf,10);
+  serialprint(buf);
+}
