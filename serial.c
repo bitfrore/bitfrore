@@ -48,16 +48,27 @@ void serialinit(){
     }
 }
 
+void serialputc(char c){
+    while ( !(LPC_UART->LSR & LSR_THRE) );
+    LPC_UART->THR = c;
+}
+
 void serialprint(const char *msg){
   int i=0;
   while(*msg!=0){
-
-    while ( !(LPC_UART->LSR & LSR_THRE) );
-    LPC_UART->THR = *msg++;
+    serialputc(*msg++);
     i++;
     if(i>=512){
       break;
     }
   }
 }
+
+void serialwrite(const char *msg,int len){
+  int i;
+  for(i=0;i<len;i++){
+    serialputc(msg[i]);
+  }
+}
+
 

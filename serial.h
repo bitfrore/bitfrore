@@ -7,6 +7,8 @@ extern "C" {
 
 void serialinit();
 void serialprint(const char *msg);
+void serialwrite(const char *msg,int len);
+void serialputc(const char c);
 
 #ifdef __cplusplus
 }
