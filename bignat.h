@@ -73,7 +73,7 @@ struct bignat {
     WORD Word() const;
     
     void String(WORD base,const char *map,char *out,int limit) const;
-    void Bytes(uint8_t *out,int limit) const;
+    int Bytes(uint8_t *out,int limit) const;
 
     friend class bigint;
     friend class bitcurve;

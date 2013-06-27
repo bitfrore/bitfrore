@@ -820,7 +820,7 @@ void bignat::Shl(const struct bignat &x,unsigned int s){
   this->norm();
 }
 
-void bignat::Bytes(uint8_t *out,int limit) const{
+int bignat::Bytes(uint8_t *out,int limit) const{
 //  memset(out,0,limit);
   for(int i=0;i<limit;i++){
     out[i]=0;
@@ -838,6 +838,12 @@ void bignat::Bytes(uint8_t *out,int limit) const{
       d>>=8;
     }
   }
+
+  while( i<limit && out[i]==0 ){
+    i++;
+  }
+
+  return i;
 
 
 
