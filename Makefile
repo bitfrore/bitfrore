@@ -176,6 +176,8 @@ HEX = $(OUT_DIR_F)$(PROJECT).hex
 BIN = $(OUT_DIR_F)$(PROJECT).bin
 LSS = $(OUT_DIR_F)$(PROJECT).lss
 DMP = $(OUT_DIR_F)$(PROJECT).dmp
+CHEX = $(OUT_DIR_F)$(PROJECT).chex
+
 
 # format final flags for tools, request dependancies for C++, C and asm
 CXX_FLAGS_F = $(CORE_FLAGS) $(OPTIMIZATION) $(CXX_WARNINGS) $(CXX_FLAGS)  $(CXX_DEFS) -MD -MP -MF $(OUT_DIR_F)$(@F:.o=.d) $(INC_DIRS_F)
@@ -185,13 +187,13 @@ AS_FLAGS_F = $(CORE_FLAGS) $(AS_FLAGS) $(AS_DEFS) -MD -MP -MF $(OUT_DIR_F)$(@F:.
 LD_FLAGS_F = $(CORE_FLAGS) $(LD_FLAGS) $(LIB_DIRS_F)
 
 #contents of output directory
-GENERATED = $(wildcard $(patsubst %, $(OUT_DIR_F)*.%, bin d dmp elf hex lss lst map o))
+GENERATED = $(wildcard $(patsubst %, $(OUT_DIR_F)*.%, bin d dmp elf hex chex lss lst map o))
 
 #=============================================================================#
 # make all
 #=============================================================================#
 
-all : make_output_dir $(ELF) $(LSS) $(DMP) $(HEX) $(BIN) print_size
+all : make_output_dir $(ELF) $(LSS) $(DMP) $(HEX) $(BIN) $(CHEX) print_size
 
 # make object files dependent on Makefile
 $(OBJS) : Makefile
@@ -277,6 +279,16 @@ $(LSS) : $(ELF)
 	@echo ' '
 
 #-----------------------------------------------------------------------------#
+# Cheksummed Hex
+#-----------------------------------------------------------------------------#
+
+$(CHEX) : $(BIN) $(HEX)
+	@echo 'Creating checksummed hex: $(CHEX)'
+	tools/checksum.py $(BIN) $(HEX) >$@
+	@echo ' '
+
+
+#-----------------------------------------------------------------------------#
 # print the size of the objects and the .elf file
 #-----------------------------------------------------------------------------#
 
@@ -313,12 +325,12 @@ endif
 
 #BURN
 burn: all
-	../lpc21isp/lpc21isp.out -hex ./out/lpc1114_blink_led.hex /dev/ttyUSB0 115200 12000
-
+	../lpc21isp/lpc21isp.out -hex ./out/lpc1114_blink_led.chex /dev/ttyUSB0 115200 12000
+	~/readserial
 #BURN
 burnremote: all
-	scp  ./out/lpc1114_blink_led.hex 192.168.0.26:/tmp/
-	ssh 192.168.0.26 "~/lpc21isp/lpc21isp.out -hex /tmp/lpc1114_blink_led.hex /dev/ttyUSB0 115200 12000 && ~/readserial" 
+	scp  ./out/lpc1114_blink_led.chex 192.168.0.26:/tmp/
+	ssh 192.168.0.26 "~/lpc21isp/lpc21isp.out -hex /tmp/lpc1114_blink_led.chex /dev/ttyUSB0 115200 12000 && ~/readserial" 
 
 
 #=============================================================================#

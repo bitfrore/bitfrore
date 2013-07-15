@@ -47,6 +47,7 @@
 #include <panic.h>
 #include <itoa.h>
 #include <serial.h>
+#include <checksum.h>
 
 #define BUTTON_GPIO							LPC_GPIO2	///< GPIO port to which the LED is connected
 #define BUTTON_pin								6			///< pin number of the LED
@@ -240,6 +241,9 @@ int main(void)
 	system_init();							// initialize other necessary elements
   //Configure for GPIO
   serialinit();
+  if( !verifyChecksum() ){
+    PANIC(PANIC_FLASH_CRC_MISMATCH);
+  }
   initprinter();
 
   adcinit();
