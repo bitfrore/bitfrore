@@ -126,7 +126,7 @@ static void system_init(void);
 *//*-------------------------------------------------------------------------*/
 
 #define ADC_NUM 8 /* for LPC11xx */
-#define ADC_CLK 2400000 /* set to 2.4Mhz */
+#define ADC_CLK 4500000 /* set to 4.5Mhz */
 #define ADC_OFFSET 0x10
 #define ADC_INDEX 4
 
@@ -151,7 +151,7 @@ to design team. */
   LPC_IOCON->PIO1_11 &= ~0x8F; /* ADC I/O config */
   LPC_IOCON->PIO1_11 |= 0x01; /* ADC IN1 */
 
-  LPC_ADC->CR = ((12000000UL/LPC_SYSCON->SYSAHBCLKDIV)/ADC_Clk-1)<<8;
+  LPC_ADC->CR = ((48000000UL/LPC_SYSCON->SYSAHBCLKDIV)/ADC_Clk-1)<<8;
 
   return;
 }
