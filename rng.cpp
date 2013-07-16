@@ -12,12 +12,13 @@
 #include <stdio.h>
 #include <serial.h>
 #include <itoa.h>
+#include <string.h>
 
 #define NIST_RNG_VERIFY
 #define NIST_RUN_RNG_VERIFY
 #define DEBIAS
 
-#define DEBUG
+//#define DEBUG
 
 //#define RNGVALDEBUG
 
@@ -111,6 +112,15 @@ const int rounds = 50;
 const int n=8*rounds*32;
 
 bool generateimpl(uint8_t data[32]){
+
+  //double check that there aren't any bab bits in the given memory
+  uint8_t doublecheck[32];
+
+  if(data!=NULL){
+    memset(data,0,32);
+    memset(doublecheck,0,32);
+  }
+
 #ifdef NIST_RNG_VERIFY
   uint8_t last=0;  
   int p=0;
@@ -128,6 +138,7 @@ bool generateimpl(uint8_t data[32]){
 
         if(data!=NULL){
           data[i] ^= (s<<bit);
+          doublecheck[i] ^= (s<<bit);
         }
 #ifdef NIST_RNG_VERIFY
         if( s==1 ){
@@ -161,7 +172,9 @@ bool generateimpl(uint8_t data[32]){
 #endif
 
   if(Pfreq>1.82139){
+#ifdef DEBUG
     DBGPRINT("FAIL FREQ");
+#endif
     return false;
   } else {
 #ifdef NIST_RUN_RNG_VERIFY
@@ -186,6 +199,14 @@ bool generateimpl(uint8_t data[32]){
 #endif
   }
 #endif
+
+  //Verify that the image if double check matches the return value
+  //Failure here indicates SRAM has some bad bits that would affect the random value
+  if(data!=NULL){
+    if( memcmp(data,doublecheck,32) != 0 ){
+      PANIC(PANIC_RNG_MEMCMP);
+    }
+  }
   return true;
 }
 

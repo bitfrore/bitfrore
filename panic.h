@@ -26,6 +26,8 @@ const paniccode PANIC_NAT_SET_ALIAS=17;
 const paniccode PANIC_NAT_POTENTIAL_OVERFLOW=18;
 const paniccode PANIC_FLASH_CRC_MISMATCH=19;
 const paniccode PANIC_WATCHDOG=20;
+const paniccode PANIC_RNG_MEMCMP=21;
+const paniccode PANIC_BITADDRESS_DOUBLECHECK=22;
 
 #ifdef __cplusplus
 #define EXTERNC extern "C"

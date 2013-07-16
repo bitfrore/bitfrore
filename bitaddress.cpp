@@ -14,7 +14,7 @@
 
 #define ADDRESS_VERIFY
 
-void bitaddress::generatePublicKey(uint8_t *PRIVATE,struct bigint &pubx,struct bigint &puby){
+void generatePublicKeyImpl(uint8_t *PRIVATE,struct bigint &pubx,struct bigint &puby){
 
   WORD pbuf[BIGNATBUFSIZE(32)];
   WORD gxbuf[BIGNATBUFSIZE(32)];
@@ -40,6 +40,26 @@ void bitaddress::generatePublicKey(uint8_t *PRIVATE,struct bigint &pubx,struct b
   }
 #endif
 }
+
+void checkGeneratePublicKey(uint8_t *PRIVATE,struct bigint &pubx,struct bigint &puby){
+  //The check buffers cause an offset in the stack ensuring different SRAM is used for the entire calculation
+  WORD checkxbuf[BIGNATBUFSIZE(32)];
+  WORD checkybuf[BIGNATBUFSIZE(32)];
+  struct bigint checkx(checkxbuf,sizeof(checkxbuf)/__S);
+  struct bigint checky(checkybuf,sizeof(checkybuf)/__S);
+
+  generatePublicKeyImpl(PRIVATE,checkx,checky);
+
+  if( checkx.Cmp(pubx) !=0 ||checky.Cmp(puby) !=0 ){
+    PANIC(PANIC_BITADDRESS_DOUBLECHECK);  
+  }
+}
+
+void bitaddress::generatePublicKey(uint8_t *PRIVATE,struct bigint &pubx,struct bigint &puby){
+  generatePublicKeyImpl(PRIVATE,pubx,puby);
+  checkGeneratePublicKey(PRIVATE,pubx,puby);
+}
+
 
 void bitaddress::generatePrivateWIF(uint8_t *PRIVATE,char *out,int limit){
   uint8_t wifbuf[37];
