@@ -48,6 +48,7 @@
 #include <itoa.h>
 #include <serial.h>
 #include <checksum.h>
+#include <watchdog.h>
 
 #define BUTTON_GPIO							LPC_GPIO2	///< GPIO port to which the LED is connected
 #define BUTTON_pin								6			///< pin number of the LED
@@ -57,9 +58,11 @@
 #define BUTTON_gma								gpio_masked_access_t GPIO_MASKED_ACCESS(BUTTON_GPIO, BUTTON_pin)
 
 
+
 void PROGRESS(float p){
   //serialprint(".");
 	LED_gma ^= LED;
+  Watchdog_Feed();
 }
 
 void PANIC(paniccode errorCode){
@@ -78,6 +81,8 @@ void PANIC(paniccode errorCode){
 		LED_gma = LED;						// instead of LED_GPIO->DATA |= LED;
 		for (count = 0; count < count_max; count++);	// delay
 		LED_gma = 0;						// instead of LED_GPIO->DATA &= ~LED;
+
+    Watchdog_Feed();
 	}}
 
 void FAIL(const char *msg){
@@ -89,6 +94,8 @@ void FAIL(const char *msg){
 
 	while (1)
 	{
+    Watchdog_Feed();
+
 		for (count = 0; count < count_max; count++);	// delay
 		LED_gma = LED;						// instead of LED_GPIO->DATA |= LED;
 		for (count = 0; count < count_max; count++);	// delay
@@ -240,15 +247,23 @@ int main(void)
 	pll_start(CRYSTAL, FREQUENCY);			// start the PLL
 	system_init();							// initialize other necessary elements
   //Configure for GPIO
+	LED_GPIO->DIR |= LED;					// set the direction of the LED pin to output
+
   serialinit();
+  if( Watchdog_Init() ){
+    PANIC(PANIC_WATCHDOG);
+  }
+
   if( !verifyChecksum() ){
     PANIC(PANIC_FLASH_CRC_MISMATCH);
   }
+
+  Watchdog_Init();
+
   initprinter();
 
   adcinit();
 
-	LED_GPIO->DIR |= LED;					// set the direction of the LED pin to output
 	BUTTON_GPIO->DIR &= ~BUTTON;					// set the direction of the Button pin to input
   MOTOR_GPIO->DIR |= MOTOR;
   MOTOR_gma=0;
@@ -293,7 +308,7 @@ int main(void)
     //testbitaddress();
 
 
-    while((BUTTON_gma & BUTTON) == 0){}
+    while((BUTTON_gma & BUTTON) == 0){Watchdog_Feed();}
 
     serialprint("go\n");
 
@@ -327,7 +342,6 @@ int main(void)
   //  testbitaddress();
 
     serialprint("done\n");
-
 
 	}
 }

@@ -7,6 +7,7 @@
 #include "inc/LPC11xx.h"
 #include "hdr/hdr_gpio_masked_access.h"
 #include <config.h>
+#include <watchdog.h>
 
 #define RECORD_TICKS
 
@@ -395,6 +396,9 @@ void m190::print(pixelsource source,void *ctx,int rows,bool overlap){
       continue;
     }
     ticks++;
+    //Feed the watchdog if we can detect the print head is moving.
+    //If the head becomes jammed ticks will stop.
+    Watchdog_Feed();
 
     //We are in the printing range
     if( y>=0 && ticks >=firsttick && ticks <=maxticks ){
