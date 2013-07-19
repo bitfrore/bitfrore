@@ -8,6 +8,7 @@
 #include "hdr/hdr_gpio_masked_access.h"
 #include <config.h>
 #include <watchdog.h>
+#include <panic.h>
 
 #define RECORD_TICKS
 
@@ -301,6 +302,13 @@ void motoron(){
   MOTOR_gma=MOTOR;
 }
 
+//TODO: I'd like the default error handler to call this too.
+void PRINTERPANIC(paniccode c){
+  motoroff();
+  solenoidsoff();
+  PANIC(c);
+}
+
 void m190::initialize(){
 
   /* Solenoids pins GPIO */
@@ -332,7 +340,8 @@ void m190::initialize(){
   motoroff();
 
   //Reset detector to input
-  LPC_IOCON->PIO2_3 |=0x81;
+  LPC_IOCON->PIO2_3 &= ~0x10; //Disable pull up
+  LPC_IOCON->PIO2_3 |=0x89; //Enable GPIO and Pull Down
   RDET_GPIO->DIR &= ~RDET;
 }
 
@@ -399,6 +408,10 @@ void m190::print(pixelsource source,void *ctx,int rows,bool overlap){
     //Feed the watchdog if we can detect the print head is moving.
     //If the head becomes jammed ticks will stop.
     Watchdog_Feed();
+    if(ticks>90*2){
+      //Reset detector is not working or timining generator has failed
+      PRINTERPANIC(PANIC_PRINT_OVERTICK);
+    }
 
     //We are in the printing range
     if( y>=0 && ticks >=firsttick && ticks <=maxticks ){

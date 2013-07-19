@@ -28,6 +28,7 @@ const paniccode PANIC_FLASH_CRC_MISMATCH=19;
 const paniccode PANIC_WATCHDOG=20;
 const paniccode PANIC_RNG_MEMCMP=21;
 const paniccode PANIC_BITADDRESS_DOUBLECHECK=22;
+const paniccode PANIC_PRINT_OVERTICK=23;
 
 #ifdef __cplusplus
 #define EXTERNC extern "C"
