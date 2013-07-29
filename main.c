@@ -239,6 +239,35 @@ void goadc(){
 /// "variable" to manipulate the pin directly via GPIO masked access
 #define RDET_gma								gpio_masked_access_t GPIO_MASKED_ACCESS(RDET_GPIO, RDET_pin)
 
+
+void memtest(){
+  volatile unsigned char ram[7150];
+  int i;
+
+  for(i=0;i<sizeof(ram);i++){
+    ram[i]=0;
+    if( ram[i]!=0){
+      PANIC(PANIC_MEMTEST);
+    }
+    ram[i]=0xFF;
+    if( ram[i]!=0xFF){
+      PANIC(PANIC_MEMTEST);
+    }
+    ram[i]=0xFF;
+    if( ram[i]!=0xFF){
+      PANIC(PANIC_MEMTEST);
+    }
+    ram[i]=0x55;
+    if( ram[i]!=0x55){
+      PANIC(PANIC_MEMTEST);
+    }
+    ram[i]=0xAA;
+    if( ram[i]!=0xAA){
+      PANIC(PANIC_MEMTEST);
+    }
+  }
+}
+
 int main(void)
 {
   int q;
@@ -258,7 +287,7 @@ int main(void)
     PANIC(PANIC_FLASH_CRC_MISMATCH);
   }
 
-  Watchdog_Init();
+  memtest();
 
   initprinter();
 
