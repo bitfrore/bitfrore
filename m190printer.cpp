@@ -9,6 +9,8 @@
 #include <config.h>
 #include <watchdog.h>
 #include <panic.h>
+#include <rng.h>
+#include <serial.h>
 
 #define RECORD_TICKS
 
@@ -309,6 +311,8 @@ void PRINTERPANIC(paniccode c){
   PANIC(c);
 }
 
+int shuffledsolenoidmasks[8];
+
 void m190::initialize(){
 
   /* Solenoids pins GPIO */
@@ -343,6 +347,32 @@ void m190::initialize(){
   LPC_IOCON->PIO2_3 &= ~0x10; //Disable pull up
   LPC_IOCON->PIO2_3 |=0x89; //Enable GPIO and Pull Down
   RDET_GPIO->DIR &= ~RDET;
+
+  serialprint("SHUFFLE init\n");
+
+  for(int i=0;i<8;i++){
+    shuffledsolenoidmasks[i]=1<<i;
+  }
+
+  serialprint("SHUFFLE rng\n");
+  uint8_t randompool[32];
+  rng::generate(randompool);
+
+  serialprint("SHUFFLE shuffle\n");
+  //Shuffle the solenooids to make it more difficult to recover
+  //the printout based on the sound of the printer.
+  for(int i=7;i>0;i--){
+    int j= randompool[i]%(i+1);
+    int t=shuffledsolenoidmasks[j];
+    shuffledsolenoidmasks[j]=shuffledsolenoidmasks[i];
+    shuffledsolenoidmasks[i]=t;
+  }
+
+  serialprint("shuffledsolenoids\n");
+  for(int i=0;i<8;i++){
+    serialprinti(shuffledsolenoidmasks[i]);
+    serialprint("\n");
+  }
 }
 
 bool formfeedsource(void *ctx,int x,int y){
@@ -354,18 +384,18 @@ int calcPortVal(m190::pixelsource source,void *ctx,int x,int y,int solgroup){
   //Only power 3 solenoids max at a time
   switch(solgroup){
     case 0:
-      if(source(ctx,x,y)){ret|=1;} //A
-      if(source(ctx,x+54,y)){ret|=1<<3;} //D
-      if(source(ctx,x+108,y)){ret|=1<<6;} //G
+      if(source(ctx,x,y)){ret|=shuffledsolenoidmasks[0];}
+      if(source(ctx,x+54,y)){ret|=shuffledsolenoidmasks[3];}
+      if(source(ctx,x+108,y)){ret|=shuffledsolenoidmasks[6];}
       break;
     case 1:
-      if(source(ctx,x+18,y)){ret|=1<<1;} //B
-      if(source(ctx,x+72,y)){ret|=1<<4;} //E
-      if(source(ctx,x+126,y)){ret|=1<<7;} //H
+      if(source(ctx,x+18,y)){ret|=shuffledsolenoidmasks[1];}
+      if(source(ctx,x+72,y)){ret|=shuffledsolenoidmasks[4];}
+      if(source(ctx,x+126,y)){ret|=shuffledsolenoidmasks[7];}
       break;
     case 2:
-      if(source(ctx,x+36,y)){ret|=1<<2;} //C
-      if(source(ctx,x+90,y)){ret|=1<<5;} //F
+      if(source(ctx,x+36,y)){ret|=shuffledsolenoidmasks[2];}
+      if(source(ctx,x+90,y)){ret|=shuffledsolenoidmasks[5];}
       break;
   }
 
@@ -415,47 +445,47 @@ void m190::print(pixelsource source,void *ctx,int rows,bool overlap){
 
     //We are in the printing range
     if( y>=0 && ticks >=firsttick && ticks <=maxticks ){
-      if( (fire&(1<<0)) !=0 ){
+      if( (fire&(shuffledsolenoidmasks[0])) !=0 ){
         SOLA_gma=SOLA;
       }else{
         SOLA_gma=0;
       }
-      if( (fire&(1<<1)) !=0 ){
+      if( (fire&(shuffledsolenoidmasks[1])) !=0 ){
         SOLB_gma=SOLB;
       }else{
         SOLB_gma=0;
       }
-      if( (fire&(1<<2)) !=0 ){
+      if( (fire&(shuffledsolenoidmasks[2])) !=0 ){
         SOLC_gma=SOLC;
       }else{
         SOLC_gma=0;
       }
 
-      if( (fire&(1<<3)) !=0 ){
+      if( (fire&(shuffledsolenoidmasks[3])) !=0 ){
         SOLD_gma=SOLD;
       }else{
         SOLD_gma=0;
       }
 
-      if( (fire&(1<<4)) !=0 ){
+      if( (fire&(shuffledsolenoidmasks[4])) !=0 ){
         SOLE_gma=SOLE;
       }else{
         SOLE_gma=0;
       }
 
-      if( (fire&(1<<5)) !=0 ){
+      if( (fire&(shuffledsolenoidmasks[5])) !=0 ){
         SOLF_gma=SOLF;
       }else{
         SOLF_gma=0;
       }
 
-      if( (fire&(1<<6)) !=0 ){
+      if( (fire&(shuffledsolenoidmasks[6])) !=0 ){
         SOLG_gma=SOLG;
       }else{
         SOLG_gma=0;
       }
 
-      if( (fire&(1<<7)) !=0 ){
+      if( (fire&(shuffledsolenoidmasks[7])) !=0 ){
         SOLH_gma=SOLH;
       }else{
         SOLH_gma=0;

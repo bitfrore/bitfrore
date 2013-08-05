@@ -287,11 +287,17 @@ int main(void)
     PANIC(PANIC_FLASH_CRC_MISMATCH);
   }
 
+  serialprint("MEMTEST\n");
+
   memtest();
 
+  serialprint("adcinit\n");
+  adcinit();
+
+  serialprint("initprinter\n");
   initprinter();
 
-  adcinit();
+
 
 	BUTTON_GPIO->DIR &= ~BUTTON;					// set the direction of the Button pin to input
   MOTOR_GPIO->DIR |= MOTOR;
