@@ -7,6 +7,7 @@
 #include <bigint.h>
 
 namespace bitaddress{
+  bool checkPrivateKey(uint8_t *PRIVATE);
   void generatePublicKey(uint8_t *PRIVATE,struct bigint &pubx,struct bigint &puby);
   void generatePrivateWIF(uint8_t *PRIVATE,char *out,int limit);
   void generateAddress(const struct bigint &pubx,const struct bigint &puby,char *out,int limit);

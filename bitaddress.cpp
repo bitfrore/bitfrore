@@ -14,8 +14,28 @@
 
 #define ADDRESS_VERIFY
 
-void generatePublicKeyImpl(uint8_t *PRIVATE,struct bigint &pubx,struct bigint &puby){
+bool bitaddress::checkPrivateKey(uint8_t *PRIVATE){
+  static const uint8_t MAXKEY[32] = {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFF,0xFE,0xBA,0xAE,0xDC,0xE6,0xAF,0x48,0xA0,0x3B,0xBF,0xD2,0x5E,0x8C,0xD0,0x36,0x41,0x40};
+    bool allzero = true;
+    for (int i=0; i<32; i++){
+        if (PRIVATE[i] != 0){
+            allzero = false;
+            break;
+	}
+    }
 
+    if(allzero) return false;
+
+    for (int i=0; i<32; i++) {
+        if (PRIVATE[i] < MAXKEY[i])
+            return true;
+        if (PRIVATE[i] > MAXKEY[i])
+            return false;
+    }
+    return true;
+}
+
+void generatePublicKeyImpl(uint8_t *PRIVATE,struct bigint &pubx,struct bigint &puby){
   WORD pbuf[BIGNATBUFSIZE(32)];
   WORD gxbuf[BIGNATBUFSIZE(32)];
   WORD gybuf[BIGNATBUFSIZE(32)];

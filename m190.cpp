@@ -86,7 +86,11 @@ void printpublic(const struct bigint &x,const struct bigint &y){
 }
 
 void generatePrivateKey(uint8_t *PRIVATE){
-  rng::generate(PRIVATE);
+  for (int i =0;i<100;i++){
+    rng::generate(PRIVATE);
+    if(bitaddress::checkPrivateKey(PRIVATE)){return;}
+  }
+  PANIC(PANIC_BITADDRESS_PK_OUTOFRANGE);
 }
 
 void initprinter(){
