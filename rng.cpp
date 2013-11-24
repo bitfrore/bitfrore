@@ -69,7 +69,7 @@ uint32_t rngadcread( uint8_t channelNum )
 }
 
 uint8_t getSampleImpl(){
-  int s = rngadcread(3);
+  int s = rngadcread(1);
 
 //  char out[10];
 //   my_itoa(s,out,10);

@@ -284,6 +284,7 @@ inline WORD bignat::leadingZeros(WORD x){
   //NOT needed on 8bit arduino uno
 //#if defined(__SAM3X8E__)
   //NOT needed on 8bit arduino uno need to re-enable on 32 bit systems
+
   while( x >= 0x8000){
     x>>=16;
     n+=16;

@@ -11,7 +11,8 @@
 # toolchain configuration
 #=============================================================================#
 
-TOOLCHAIN = ~/gcc-arm-none-eabi-4_7-2012q4/bin/arm-none-eabi-
+#TOOLCHAIN = ~/gcc-arm-none-eabi-4_7-2012q4/bin/arm-none-eabi-
+TOOLCHAIN = ~/gcc-arm-none-eabi-4_7-2013q2/bin/arm-none-eabi-
 
 CXX = $(TOOLCHAIN)g++
 CC = $(TOOLCHAIN)gcc
