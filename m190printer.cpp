@@ -10,7 +10,7 @@
 #include <watchdog.h>
 #include <panic.h>
 
-#define RECORD_TICKS
+//#define RECORD_TICKS
 
 #define ADC_NUM 8 /* for LPC11xx */
 #define ADC_CLK 2400000 /* set to 2.4Mhz */

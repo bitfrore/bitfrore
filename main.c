@@ -50,14 +50,22 @@
 #include <checksum.h>
 #include <watchdog.h>
 
-#define BUTTON_GPIO							LPC_GPIO2	///< GPIO port to which the LED is connected
-#define BUTTON_pin								6			///< pin number of the LED
+#define BUTTON_GPIO							LPC_GPIO0	///< GPIO port to which the LED is connected
+#define BUTTON_pin								1			///< pin number of the LED
 #define BUTTON									(1 << BUTTON_pin)
 
 /// "variable" to manipulate the pin directly via GPIO masked access
 #define BUTTON_gma								gpio_masked_access_t GPIO_MASKED_ACCESS(BUTTON_GPIO, BUTTON_pin)
 
 
+#define RDETP_GPIO							LPC_GPIO3	///< GPIO port to which the LED is connected
+#define RDETP_pin								1			///< pin number of the LED
+#define RDETP									(1 << RDETP_pin)
+
+/// "variable" to manipulate the pin directly via GPIO masked access
+#define RDETP_gma								gpio_masked_access_t GPIO_MASKED_ACCESS(RDETP_GPIO, RDETP_pin)
+
+void BitcoinStuttgart();
 
 void PROGRESS(float p){
   //serialprint(".");
@@ -119,6 +127,7 @@ void FAIL(const char *msg){
 static void flash_access_time(uint32_t frequency);
 static uint32_t pll_start(uint32_t crystal, uint32_t frequency);
 static void system_init(void);
+static void outputclock(void);
 
 /*
 +=============================================================================+
@@ -153,8 +162,14 @@ int adcinit(){
   /* Unlike some other pings, for ADC test, all the pins need
 to set to analog mode. Bit 7 needs to be cleared according
 to design team. */
+  LPC_IOCON->R_PIO1_1 &= ~0x8F; /* ADC I/O config */
+  LPC_IOCON->R_PIO1_1 |= 0x01; /* ADC IN0 */
   LPC_IOCON->R_PIO1_2 &= ~0x8F; /* ADC I/O config */
   LPC_IOCON->R_PIO1_2 |= 0x01; /* ADC IN0 */
+  LPC_IOCON->R_PIO1_0 &= ~0x8F; /* ADC I/O config */
+  LPC_IOCON->R_PIO1_0 |= 0x01; /* ADC IN0 */
+
+
   LPC_IOCON->PIO1_11 &= ~0x8F; /* ADC I/O config */
   LPC_IOCON->PIO1_11 |= 0x01; /* ADC IN1 */
 
@@ -163,6 +178,7 @@ to design team. */
   return;
 }
 
+/*
 #define tickring 128
 int ticks[tickring];
 int tickpos=0;
@@ -174,6 +190,20 @@ void recordTick(int val){
     tickpos=0;
   }
 }
+
+void printticks(){
+  int i;
+  char buf[10];
+  for(i=0;i<tickring;i++){
+    int tp = tickpos+i;
+    tp%=tickring;
+    my_itoa(ticks[tp],buf,10);
+    serialprint("tick = ");
+    serialprint(buf);
+    serialprint("\n");
+  }
+}
+*/
 
 uint32_t adcread( uint8_t channelNum )
 {
@@ -206,27 +236,53 @@ uint32_t adcread( uint8_t channelNum )
   return ( ADC_Data );	/* return A/D conversion value */
 }
 
-void printticks(){
-  int i;
-  char buf[10];
-  for(i=0;i<tickring;i++){
-    int tp = tickpos+i;
-    tp%=tickring;
-    my_itoa(ticks[tp],buf,10);
-    serialprint("tick = ");
-    serialprint(buf);
-    serialprint("\n");
-  }
-}
-
 void goadc(){
+  MOTOR_gma=MOTOR;
   for(;;){
     char buf[10];
     uint32_t val;
 
+
+    Watchdog_Feed();
+
+    val = adcread(0); 
+    my_itoa(val,buf,10);
+    serialprint("AD0 = ");
+    serialprint(buf);
+
+    val = adcread(1); 
+    my_itoa(val,buf,10);
+    serialprint("AD1 = ");
+    serialprint(buf);
+
+    val = adcread(2); 
+    my_itoa(val,buf,10);
+    serialprint("AD2 = ");
+    serialprint(buf);
+
     val = adcread(3); 
     my_itoa(val,buf,10);
     serialprint("AD3 = ");
+    serialprint(buf);
+
+    val = adcread(4); 
+    my_itoa(val,buf,10);
+    serialprint("AD4 = ");
+    serialprint(buf);
+
+    val = adcread(5); 
+    my_itoa(val,buf,10);
+    serialprint("AD5 = ");
+    serialprint(buf);
+
+    val = adcread(6); 
+    my_itoa(val,buf,10);
+    serialprint("AD6 = ");
+    serialprint(buf);
+
+    val = adcread(7); 
+    my_itoa(val,buf,10);
+    serialprint("AD7 = ");
     serialprint(buf);
     serialprint("\n");
   }
@@ -241,7 +297,7 @@ void goadc(){
 
 
 void memtest(){
-  volatile unsigned char ram[7150];
+  volatile unsigned char ram[4000];
   int i;
 
   for(i=0;i<sizeof(ram);i++){
@@ -274,9 +330,14 @@ int main(void)
 	volatile uint32_t count, count_max = 1000000;//1000000;	// with core frequency ~50MHz this gives ~1.5Hz blinking frequency
 
 	pll_start(CRYSTAL, FREQUENCY);			// start the PLL
+  //outputclock();
 	system_init();							// initialize other necessary elements
   //Configure for GPIO
+  LPC_IOCON->RESET_PIO0_0 |= 0x01; //this makes the led work but makes it real difficult ot get into progamming mode
 	LED_GPIO->DIR |= LED;					// set the direction of the LED pin to output
+	RDETP_GPIO->DIR |= RDETP;					// set the direction of the RDETP pin to output
+  RDETP_gma=RDETP;
+
 
   serialinit();
   if( Watchdog_Init() ){
@@ -298,12 +359,12 @@ int main(void)
   MOTOR_gma=0;
 
 
-//    testBigNat();
-//    testBigInt();
-//    testBitElliptic();
-//  goadc();
+    //testBigNat();
+    //testBigInt();
+    //testBitElliptic();
+  //goadc();
 
-//    testbitaddress();
+    //testbitaddress();
 
 /*
   while (1)
@@ -336,8 +397,30 @@ int main(void)
 
     //testbitaddress();
 
+    char buf[10];
+    while((BUTTON_gma & BUTTON) == BUTTON){
+      Watchdog_Feed();
+    }
 
-    while((BUTTON_gma & BUTTON) == 0){Watchdog_Feed();}
+    int counter=0;
+    volatile uint32_t count, count_max = 200000;
+    for (count = 0; count < count_max; count++);	// delay
+    while((BUTTON_gma & BUTTON) == 0){
+      for (count = 0; count < count_max; count++);	// delay
+      Watchdog_Feed();
+      counter++;
+    }
+
+    my_itoa(counter,buf,10);
+    serialprint("counter = ");
+    serialprint(buf);
+    serialprint("\n");
+
+    if(counter>60){
+      serialprint("Bitcoin Community Region Stuttgart\n");
+      BitcoinStuttgart();
+      continue;      
+    }
 
     serialprint("go\n");
 
@@ -362,9 +445,9 @@ int main(void)
 
     serialprint("print\n");
   //  m190test();
-    printpaperwallet();  
+  printpaperwallet();  
 
-    printticks();
+  //  printticks();
   //  testBigNat();
   //  testBigInt();
   //  testBitElliptic();
@@ -427,6 +510,9 @@ static uint32_t pll_start(uint32_t crystal, uint32_t frequency)
 	uint32_t m, p = 0, fcco;
 
 	flash_access_time(frequency);			// configure flash access time first
+
+  // tweak the trim register of the internal clock
+  LPC_SYSCON->IRCCTRL += 23; // using a scope determined that this generates 50MHz for my chip    
 
 	// SYSOSCCTRL_FREQRANGE should be 0 for crystals in range 1 - 20MHz
 	// SYSOSCCTRL_FREQRANGE should be 1 for crystals in range 15 - 25MHz
